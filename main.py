@@ -151,6 +151,7 @@ DEFAULT_PROFILE: dict[str, Any] = {
     "owned_titles": [],
     "equipped_title": "",
     "owned_bubble_frames": [],
+    "equipped_bubble_frame": "",
     "owned_special_performances": [],
     "owned_dialogues": [],
     "owned_dialogue_packs": [],
@@ -158,6 +159,54 @@ DEFAULT_PROFILE: dict[str, Any] = {
     "gacha_draw_count": 0,
     "gacha_pity_counter": 0,
     "last_discount_draw_date": "",
+}
+
+BUBBLE_FRAME_STYLES: dict[str, dict[str, Any]] = {
+    "": {
+        "label": "默认奶茶气泡",
+        "normal": {
+            "background": "rgba(255, 248, 238, 232)",
+            "color": "#6f4b3e",
+            "border": "2px solid rgba(178, 128, 98, 210)",
+            "padding": "6px 10px",
+        },
+        "status": {
+            "background": "rgba(255, 250, 242, 246)",
+            "color": "#6f4b3e",
+            "border": "2px solid rgba(188, 132, 103, 230)",
+            "padding": "10px 14px",
+        },
+    },
+    "rare_bubble_cream": {
+        "label": "奶盖气泡边框",
+        "normal": {
+            "background": "rgba(255, 252, 242, 238)",
+            "color": "#6a4536",
+            "border": "3px solid rgba(218, 169, 115, 232)",
+            "padding": "6px 10px",
+        },
+        "status": {
+            "background": "rgba(255, 252, 242, 248)",
+            "color": "#6a4536",
+            "border": "3px solid rgba(218, 169, 115, 238)",
+            "padding": "10px 14px",
+        },
+    },
+    "perm_cream_frame": {
+        "label": "永久奶盖气泡边框",
+        "normal": {
+            "background": "rgba(255, 249, 232, 240)",
+            "color": "#643f31",
+            "border": "3px solid rgba(236, 186, 94, 240)",
+            "padding": "6px 10px",
+        },
+        "status": {
+            "background": "rgba(255, 249, 232, 250)",
+            "color": "#643f31",
+            "border": "3px solid rgba(236, 186, 94, 245)",
+            "padding": "10px 14px",
+        },
+    },
 }
 
 
@@ -786,31 +835,23 @@ class NaichaMouse(QWidget):
         )
         self.update_accessory_label()
 
-    @staticmethod
-    def bubble_style(font_size: int, border_radius: int, *, status: bool = False) -> str:
-        if status:
-            return f"""
-            QLabel {{
-                background-color: rgba(255, 250, 242, 246);
-                color: #6f4b3e;
-                border: 2px solid rgba(188, 132, 103, 230);
-                border-radius: {border_radius}px;
-                padding: 10px 14px;
-                font-family: "Microsoft YaHei", "SimHei", sans-serif;
-                font-size: {font_size}px;
-                line-height: 130%;
-            }}
-            """
-
+    def bubble_style(self, font_size: int, border_radius: int, *, status: bool = False) -> str:
+        style_key = "status" if status else "normal"
+        frame = BUBBLE_FRAME_STYLES.get(
+            self.current_bubble_frame_id(),
+            BUBBLE_FRAME_STYLES[""],
+        )[style_key]
+        line_height = "line-height: 130%;" if status else ""
         return f"""
         QLabel {{
-            background-color: rgba(255, 248, 238, 232);
-            color: #6f4b3e;
-            border: 2px solid rgba(178, 128, 98, 210);
+            background-color: {frame["background"]};
+            color: {frame["color"]};
+            border: {frame["border"]};
             border-radius: {border_radius}px;
-            padding: 6px 10px;
+            padding: {frame["padding"]};
             font-family: "Microsoft YaHei", "SimHei", sans-serif;
             font-size: {font_size}px;
+            {line_height}
         }}
         """
 
@@ -1063,8 +1104,11 @@ class NaichaMouse(QWidget):
             self.restore_normal_layout()
         if "\n" not in text:
             self.last_dialogue_text = text
+        font_size = max(10, int(14 * self.user_scale))
+        border_radius = max(8, int(14 * self.user_scale))
         self.bubble.setText(text)
         self.bubble.setAlignment(Qt.AlignCenter)
+        self.bubble.setStyleSheet(self.bubble_style(font_size, border_radius))
         self.bubble.setGeometry(12, 8, self.window_width - 24, self.bubble_height)
         self.bubble.show()
         self.bubble.raise_()
@@ -2324,6 +2368,8 @@ class NaichaMouse(QWidget):
                 detail = f"重复边框转为奶茶碎片 +{shard_gain}"
             else:
                 self.profile["owned_bubble_frames"].append(reward_id)
+                if not self.profile.get("equipped_bubble_frame"):
+                    self.profile["equipped_bubble_frame"] = reward_id
                 detail = f"气泡边框解锁：{title}"
 
         elif reward_type == "performance":
@@ -2390,6 +2436,90 @@ class NaichaMouse(QWidget):
             for item in self.gacha_pool.get("rewards", [])
             if item.get("type") == "title"
         }
+
+    def bubble_frame_rewards(self) -> dict[str, str]:
+        rewards = {
+            str(item.get("id")): str(item.get("title", item.get("id")))
+            for item in self.gacha_pool.get("rewards", [])
+            if item.get("type") == "bubble_frame"
+        }
+        for frame_id, style in BUBBLE_FRAME_STYLES.items():
+            if frame_id:
+                rewards.setdefault(frame_id, str(style["label"]))
+        return rewards
+
+    def current_bubble_frame_id(self) -> str:
+        equipped = str(self.profile.get("equipped_bubble_frame", ""))
+        if not equipped:
+            return ""
+        if equipped in self.profile.get("owned_bubble_frames", []):
+            return equipped
+        return ""
+
+    def bubble_frame_label(self, frame_id: str | None = None) -> str:
+        frame_id = self.current_bubble_frame_id() if frame_id is None else frame_id
+        if not frame_id:
+            return str(BUBBLE_FRAME_STYLES[""]["label"])
+        return self.bubble_frame_rewards().get(
+            frame_id,
+            str(BUBBLE_FRAME_STYLES.get(frame_id, {}).get("label", frame_id)),
+        )
+
+    def equip_bubble_frame(self, frame_id: str) -> None:
+        if frame_id and frame_id not in self.profile.get("owned_bubble_frames", []):
+            return
+        self.profile["equipped_bubble_frame"] = frame_id
+        self.save_profile()
+        self.apply_layout()
+        if frame_id:
+            self.show_bubble(f"气泡样式已切换：{self.bubble_frame_label(frame_id)}", 2800)
+        else:
+            self.show_bubble("气泡样式已切回默认。", 2600)
+
+    def show_bubble_frames_panel(self) -> None:
+        owned = self.profile.get("owned_bubble_frames", [])
+        if not owned:
+            self.show_status_bubble("奶茶鼠气泡样式\n还没有获得气泡边框，可以从扭蛋机抽到。", 5200)
+            return
+        lines = [
+            "奶茶鼠气泡样式",
+            f"当前使用：{self.bubble_frame_label()}",
+            f"已获得边框：{len(owned)} 个",
+        ]
+        frame_map = self.bubble_frame_rewards()
+        lines.extend(f"- {frame_map.get(frame_id, frame_id)}" for frame_id in owned)
+        self.show_status_bubble("\n".join(lines), 7200)
+
+    def performance_rewards(self) -> dict[str, dict[str, str]]:
+        return {
+            str(item.get("id")): {
+                "title": str(item.get("title", item.get("id"))),
+                "state_id": str(item.get("state_id") or self.state_for_gacha_reward(str(item.get("rarity", "normal")), "performance")),
+            }
+            for item in self.gacha_pool.get("rewards", [])
+            if item.get("type") == "performance"
+        }
+
+    def play_collected_performance(self, performance_id: str) -> None:
+        if performance_id not in self.profile.get("owned_special_performances", []):
+            return
+        data = self.performance_rewards().get(performance_id)
+        if not data:
+            return
+        self.play_state(data["state_id"], f"演出回放：{data['title']}", bubble_ms=3400, return_after_ms=5200)
+
+    def show_performances_panel(self) -> None:
+        owned = self.profile.get("owned_special_performances", [])
+        if not owned:
+            self.show_status_bubble("奶茶鼠演出收藏\n还没有获得演出，可以从扭蛋机抽到。", 5200)
+            return
+        performance_map = self.performance_rewards()
+        lines = ["奶茶鼠演出收藏", f"已收藏演出：{len(owned)} 个"]
+        lines.extend(
+            f"- {performance_map.get(performance_id, {}).get('title', performance_id)}"
+            for performance_id in owned
+        )
+        self.show_status_bubble("\n".join(lines), 7200)
 
     def equipped_title_label(self) -> str:
         equipped = str(self.profile.get("equipped_title", ""))
@@ -2477,6 +2607,8 @@ class NaichaMouse(QWidget):
             f"🧋 奶茶碎片  {int(self.profile['milk_tea_shards'])}\n"
             f"☕ 今日互动值  {int(self.profile['today_interaction_exp'])}/{DAILY_INTERACTION_EXP_CAP}\n"
             f"🎖 已获得称号  {len(self.profile.get('owned_titles', []))} 个\n"
+            f"🫧 气泡样式  {self.bubble_frame_label()}（{len(self.profile.get('owned_bubble_frames', []))} 个）\n"
+            f"🎬 演出收藏  {len(self.profile.get('owned_special_performances', []))} 个\n"
             f"💬 已解锁口头禅  {dialogue_count} 条\n"
             f"⏱ 今日专注  {int(self.profile['focus_completed_count'])} 次"
         )
@@ -2559,6 +2691,37 @@ class NaichaMouse(QWidget):
             empty_action = QAction("还没有称号", title_menu)
             empty_action.setEnabled(False)
             title_menu.addAction(empty_action)
+
+        bubble_menu = focus_menu.addMenu("气泡样式")
+        self.add_action(bubble_menu, "查看气泡样式", self.show_bubble_frames_panel)
+        default_prefix = "✓ " if not self.current_bubble_frame_id() else ""
+        self.add_action(bubble_menu, f"{default_prefix}使用 默认奶茶气泡", lambda: self.equip_bubble_frame(""))
+        owned_frames = self.profile.get("owned_bubble_frames", [])
+        if owned_frames:
+            bubble_menu.addSeparator()
+            frame_map = self.bubble_frame_rewards()
+            for frame_id in owned_frames:
+                label = frame_map.get(frame_id, frame_id)
+                prefix = "✓ " if frame_id == self.current_bubble_frame_id() else ""
+                self.add_action(bubble_menu, f"{prefix}使用 {label}", lambda frame_id=frame_id: self.equip_bubble_frame(frame_id))
+        else:
+            empty_action = QAction("还没有气泡边框", bubble_menu)
+            empty_action.setEnabled(False)
+            bubble_menu.addAction(empty_action)
+
+        performance_menu = focus_menu.addMenu("演出收藏")
+        self.add_action(performance_menu, "查看演出收藏", self.show_performances_panel)
+        owned_performances = self.profile.get("owned_special_performances", [])
+        if owned_performances:
+            performance_menu.addSeparator()
+            performance_map = self.performance_rewards()
+            for performance_id in owned_performances:
+                label = performance_map.get(performance_id, {}).get("title", performance_id)
+                self.add_action(performance_menu, f"播放 {label}", lambda performance_id=performance_id: self.play_collected_performance(performance_id))
+        else:
+            empty_action = QAction("还没有演出收藏", performance_menu)
+            empty_action.setEnabled(False)
+            performance_menu.addAction(empty_action)
 
         ai_menu = focus_menu.addMenu("AI 聊天")
         self.add_action(ai_menu, "和奶茶鼠聊天", self.ask_ai_chat)
