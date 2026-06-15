@@ -2,10 +2,6 @@
 
 奶茶鼠桌宠是一个基于 PyQt5 的 Windows 桌面陪伴小程序。它会常驻桌面，随机切换奶茶鼠 GIF/PNG 表情，支持拖动、边缘移动、打字陪写气泡、成长等级、金币扭蛋机、可拖动配饰和大模型 API 对话。
 
-## Star 趋势
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Xzyery/naichashu&type=Date)](https://star-history.com/#Xzyery/naichashu&Date)
-
 ## 素材预览
 
 <p>
@@ -212,6 +208,6 @@ required_exp = int(55 + level * level * 0.25 + level * 18)
 
 修改配饰位置和默认尺寸：编辑 `naicha_mouse_accessories.json`。
 
-## 发布说明
+## Star 趋势
 
-建议不要上传运行缓存、个人 API Key、个人存档、制作预览图或压缩包。当前项目已用 `.gitignore` 排除这些文件。
+[![Star History Chart](https://api.star-history.com/svg?repos=Xzyery/naichashu&type=Date)](https://star-history.com/#Xzyery/naichashu&Date)
