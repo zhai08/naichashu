@@ -54,6 +54,27 @@ run_naicha_mouse.bat
 python main.py
 ```
 
+## 打包成 EXE
+
+项目已提供打包脚本：
+
+```bat
+build_exe.bat
+```
+
+运行后会生成：
+
+```text
+dist\奶茶鼠桌宠.exe
+```
+
+这个 exe 可以直接双击启动。首次运行后，程序会在 exe 同目录生成本地存档和 AI 配置：
+
+- `naicha_mouse_profile.json`
+- `naicha_mouse_ai_config.json`
+
+这两个文件用于保存等级、金币、抽奖、配饰位置和 API 设置，不需要上传到 GitHub。
+
 ## 主要功能
 
 - 启动动画：先播放 `启动的时候展示起不来.GIF`，再播放 `我来了.GIF`。

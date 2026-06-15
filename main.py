@@ -34,14 +34,28 @@ from PyQt5.QtWidgets import (
 )
 
 
-BASE_DIR = Path(__file__).resolve().parent
-STATE_MAP_PATH = BASE_DIR / "naicha_mouse_state_map.json"
-DIALOGUES_PATH = BASE_DIR / "naicha_mouse_dialogues.json"
-PROFILE_PATH = BASE_DIR / "naicha_mouse_profile.json"
-GACHA_POOL_PATH = BASE_DIR / "naicha_mouse_gacha_pool.json"
-ACCESSORY_CONFIG_PATH = BASE_DIR / "naicha_mouse_accessories.json"
-ACCESSORY_DIR = BASE_DIR / "accessories"
-AI_CONFIG_PATH = BASE_DIR / "naicha_mouse_ai_config.json"
+def get_resource_dir() -> Path:
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS)
+    return Path(__file__).resolve().parent
+
+
+def get_app_dir() -> Path:
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent
+
+
+RESOURCE_DIR = get_resource_dir()
+APP_DIR = get_app_dir()
+BASE_DIR = RESOURCE_DIR
+STATE_MAP_PATH = RESOURCE_DIR / "naicha_mouse_state_map.json"
+DIALOGUES_PATH = RESOURCE_DIR / "naicha_mouse_dialogues.json"
+PROFILE_PATH = APP_DIR / "naicha_mouse_profile.json"
+GACHA_POOL_PATH = RESOURCE_DIR / "naicha_mouse_gacha_pool.json"
+ACCESSORY_CONFIG_PATH = RESOURCE_DIR / "naicha_mouse_accessories.json"
+ACCESSORY_DIR = RESOURCE_DIR / "accessories"
+AI_CONFIG_PATH = APP_DIR / "naicha_mouse_ai_config.json"
 
 MAX_LEVEL = 52
 DAILY_INTERACTION_EXP_CAP = 200
@@ -152,7 +166,7 @@ def resolve_asset_path(asset_folder: Path, filename: str) -> Path:
     if asset_path.is_absolute():
         return asset_path
 
-    candidates = [asset_folder / asset_path, BASE_DIR / asset_path]
+    candidates = [asset_folder / asset_path, RESOURCE_DIR / asset_path, APP_DIR / asset_path]
     for candidate in candidates:
         if candidate.exists():
             return candidate

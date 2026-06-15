@@ -7,6 +7,9 @@ naicha_mouse_ai_config.json
 
 # Local packages and previews
 *.zip
+build/
+dist/
+*.spec
 tmp_*/
 transparency_previews/
 *_contact_sheet.png
