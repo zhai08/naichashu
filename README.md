@@ -2,6 +2,23 @@
 
 奶茶鼠桌宠是一个基于 PyQt5 的 Windows 桌面陪伴小程序。它会常驻桌面，随机切换奶茶鼠 GIF/PNG 表情，支持拖动、边缘移动、打字陪写气泡、成长等级、金币扭蛋机、可拖动配饰和大模型 API 对话。
 
+## 免编程下载运行
+
+普通用户不需要安装 Python，也不需要打包。
+
+在 GitHub 下载项目 ZIP 后，解压并双击运行：
+
+```text
+release\奶茶鼠桌宠.exe
+```
+
+首次运行后，程序会在 exe 同目录生成本地存档和 AI 配置：
+
+- `naicha_mouse_profile.json`
+- `naicha_mouse_ai_config.json`
+
+这两个文件用于保存等级、金币、抽奖、配饰位置和 API 设置。
+
 ## 素材预览
 
 <p>
@@ -65,7 +82,7 @@ build_exe.bat
 运行后会生成：
 
 ```text
-dist\奶茶鼠桌宠.exe
+release\奶茶鼠桌宠.exe
 ```
 
 这个 exe 可以直接双击启动。首次运行后，程序会在 exe 同目录生成本地存档和 AI 配置：
@@ -193,9 +210,12 @@ required_exp = int(55 + level * level * 0.25 + level * 18)
 |---|---|
 | `main.py` | 桌宠主程序 |
 | `run_naicha_mouse.bat` | Windows 双击启动脚本 |
+| `build_exe.bat` | Windows 一键打包脚本 |
 | `requirements.txt` | Python 依赖 |
+| `release/` | 可直接双击运行的 exe |
 | `IMG_5791/` | 奶茶鼠 GIF/PNG 表情素材 |
 | `accessories/` | 透明 PNG 配饰素材 |
+| `app_icon.ico` | exe 图标，来自 `IMG_5791/静态卖萌.png` |
 | `naicha_mouse_state_map.json` | 状态、素材、随机池和触发配置 |
 | `naicha_mouse_dialogues.json` | 气泡文案池 |
 | `naicha_mouse_gacha_pool.json` | 扭蛋机奖池、概率和奖励配置 |

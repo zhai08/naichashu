@@ -10,7 +10,8 @@ pyinstaller ^
   --clean ^
   --onefile ^
   --windowed ^
-  --name "奶茶鼠桌宠" ^
+  --name "NaichaMouse" ^
+  --icon "app_icon.ico" ^
   --add-data "IMG_5791;IMG_5791" ^
   --add-data "accessories;accessories" ^
   --add-data "naicha_mouse_state_map.json;." ^
@@ -19,6 +20,9 @@ pyinstaller ^
   --add-data "naicha_mouse_accessories.json;." ^
   main.py
 
+if not exist "release" mkdir "release"
+copy /Y "dist\NaichaMouse.exe" "release\奶茶鼠桌宠.exe" >nul
+
 echo.
-echo 打包完成：dist\奶茶鼠桌宠.exe
+echo 打包完成：release\奶茶鼠桌宠.exe
 pause
