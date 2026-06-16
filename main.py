@@ -7,12 +7,14 @@ import threading
 import time
 import urllib.error
 import urllib.request
-from ctypes import POINTER, Structure, byref, windll
-from ctypes import wintypes
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import Any, Optional
+
+if sys.platform == "win32":
+    from ctypes import POINTER, Structure, byref, windll
+    from ctypes import wintypes
 
 from PyQt5.QtCore import QPoint, QSize, Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QCursor, QMovie, QPixmap
@@ -41,6 +43,10 @@ def get_resource_dir() -> Path:
 
 
 def get_app_dir() -> Path:
+    if getattr(sys, "frozen", False) and sys.platform == "darwin":
+        app_dir = Path.home() / "Library" / "Application Support" / "NaichaMouse"
+        app_dir.mkdir(parents=True, exist_ok=True)
+        return app_dir
     if getattr(sys, "frozen", False):
         return Path(sys.executable).resolve().parent
     return Path(__file__).resolve().parent
@@ -79,29 +85,34 @@ BASE_WINDOW_WIDTH = 330
 BASE_WINDOW_HEIGHT = 315
 BASE_BUBBLE_HEIGHT = 72
 DEFAULT_SCALE_PERCENT = 50
+IS_WINDOWS = sys.platform == "win32"
+GLOBAL_TYPING_SUPPORTED = IS_WINDOWS
 
 
-class WinRect(Structure):
-    _fields_ = [
-        ("left", wintypes.LONG),
-        ("top", wintypes.LONG),
-        ("right", wintypes.LONG),
-        ("bottom", wintypes.LONG),
-    ]
+if IS_WINDOWS:
+    class WinRect(Structure):
+        _fields_ = [
+            ("left", wintypes.LONG),
+            ("top", wintypes.LONG),
+            ("right", wintypes.LONG),
+            ("bottom", wintypes.LONG),
+        ]
 
 
-class WinPoint(Structure):
-    _fields_ = [("x", wintypes.LONG), ("y", wintypes.LONG)]
+    class WinPoint(Structure):
+        _fields_ = [("x", wintypes.LONG), ("y", wintypes.LONG)]
 
 
-user32 = windll.user32
-user32.GetForegroundWindow.restype = wintypes.HWND
-user32.GetWindowRect.argtypes = [wintypes.HWND, POINTER(WinRect)]
-user32.GetWindowRect.restype = wintypes.BOOL
-user32.GetCursorPos.argtypes = [POINTER(WinPoint)]
-user32.GetCursorPos.restype = wintypes.BOOL
-user32.GetAsyncKeyState.argtypes = [wintypes.INT]
-user32.GetAsyncKeyState.restype = wintypes.SHORT
+    user32 = windll.user32
+    user32.GetForegroundWindow.restype = wintypes.HWND
+    user32.GetWindowRect.argtypes = [wintypes.HWND, POINTER(WinRect)]
+    user32.GetWindowRect.restype = wintypes.BOOL
+    user32.GetCursorPos.argtypes = [POINTER(WinPoint)]
+    user32.GetCursorPos.restype = wintypes.BOOL
+    user32.GetAsyncKeyState.argtypes = [wintypes.INT]
+    user32.GetAsyncKeyState.restype = wintypes.SHORT
+else:
+    user32 = None
 
 TYPING_KEYS = tuple(
     list(range(0x30, 0x3A))
@@ -531,8 +542,8 @@ class NaichaMouse(QWidget):
         self.ai_chat_dialog: Optional[AiChatDialog] = None
         self.chat_history: list[dict[str, str]] = []
 
-        self.typing_follow_enabled = True
-        self.typing_bubble_enabled = True
+        self.typing_follow_enabled = GLOBAL_TYPING_SUPPORTED
+        self.typing_bubble_enabled = GLOBAL_TYPING_SUPPORTED
         self.typing_active = False
         self.last_typing_at = 0.0
         self.last_follow_move_at = 0.0
@@ -703,8 +714,12 @@ class NaichaMouse(QWidget):
         }
 
     def save_ai_config(self) -> None:
-        with AI_CONFIG_PATH.open("w", encoding="utf-8") as file:
-            json.dump(self.ai_config, file, ensure_ascii=False, indent=2)
+        try:
+            AI_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+            with AI_CONFIG_PATH.open("w", encoding="utf-8") as file:
+                json.dump(self.ai_config, file, ensure_ascii=False, indent=2)
+        except OSError as error:
+            print(f"保存 AI 配置失败：{error}", file=sys.stderr)
 
     @staticmethod
     def normalize_ai_url(base_url: str, provider: str = "openai", model: str = "") -> str:
@@ -832,7 +847,8 @@ class NaichaMouse(QWidget):
 
         self.typing_timer = QTimer(self)
         self.typing_timer.timeout.connect(self.poll_typing)
-        self.typing_timer.start(35)
+        if GLOBAL_TYPING_SUPPORTED:
+            self.typing_timer.start(35)
 
         self.roam_timer = QTimer(self)
         self.roam_timer.timeout.connect(self.update_roaming)
@@ -905,8 +921,12 @@ class NaichaMouse(QWidget):
         self.bubble_decoration.raise_()
 
     def save_profile(self) -> None:
-        with PROFILE_PATH.open("w", encoding="utf-8") as file:
-            json.dump(self.profile, file, ensure_ascii=False, indent=2)
+        try:
+            PROFILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+            with PROFILE_PATH.open("w", encoding="utf-8") as file:
+                json.dump(self.profile, file, ensure_ascii=False, indent=2)
+        except OSError as error:
+            print(f"保存本地存档失败：{error}", file=sys.stderr)
 
     @staticmethod
     def required_exp_for_level(level: int) -> int:
@@ -1774,6 +1794,8 @@ class NaichaMouse(QWidget):
         self.show_pending_level_up()
 
     def poll_typing(self) -> None:
+        if not GLOBAL_TYPING_SUPPORTED or user32 is None:
+            return
         if not self.typing_follow_enabled or self.startup_active or self.exiting:
             return
 
@@ -1815,6 +1837,8 @@ class NaichaMouse(QWidget):
 
     @staticmethod
     def is_shortcut_modifier_down() -> bool:
+        if not GLOBAL_TYPING_SUPPORTED or user32 is None:
+            return False
         return any(
             user32.GetAsyncKeyState(key_code) & 0x8000
             for key_code in (0x11, 0x12, 0x5B, 0x5C)
@@ -1862,6 +1886,9 @@ class NaichaMouse(QWidget):
 
     def typing_target_position(self) -> QPoint:
         screen = QApplication.primaryScreen().availableGeometry()
+        if not GLOBAL_TYPING_SUPPORTED or user32 is None:
+            return self.clamp_to_screen(QCursor.pos() + QPoint(28, 28), screen)
+
         hwnd = user32.GetForegroundWindow()
         rect = WinRect()
         own_hwnd = int(self.winId())
@@ -1907,6 +1934,10 @@ class NaichaMouse(QWidget):
         self.move(current.x() + int(dx * 0.35), current.y() + int(dy * 0.35))
 
     def toggle_typing_follow(self) -> None:
+        if not GLOBAL_TYPING_SUPPORTED:
+            self.show_typing_unavailable()
+            return
+
         self.typing_follow_enabled = not self.typing_follow_enabled
         if self.typing_follow_enabled:
             self.key_down.clear()
@@ -1921,11 +1952,18 @@ class NaichaMouse(QWidget):
         self.show_bubble("打字跟随已关闭。", 2600)
 
     def toggle_typing_bubble(self) -> None:
+        if not GLOBAL_TYPING_SUPPORTED:
+            self.show_typing_unavailable()
+            return
+
         self.typing_bubble_enabled = not self.typing_bubble_enabled
         self.typing_key_count = 0
         self.last_typing_bubble_text = ""
         message = "打字气泡已开启。" if self.typing_bubble_enabled else "打字气泡已关闭。"
         self.show_bubble(message, 2600)
+
+    def show_typing_unavailable(self) -> None:
+        self.show_bubble("Mac 稳妥版未启用全局打字检测。", 3600)
 
     def screen_geometry(self) -> Any:
         return QApplication.primaryScreen().availableGeometry()
@@ -2897,10 +2935,14 @@ class NaichaMouse(QWidget):
         self.add_action(opacity_menu, "100%", lambda: self.setWindowOpacity(1.0))
 
         settings_menu = menu.addMenu("设置")
-        typing_title = "关闭打字跟随" if self.typing_follow_enabled else "开启打字跟随"
-        self.add_action(settings_menu, typing_title, self.toggle_typing_follow)
-        bubble_title = "关闭打字气泡" if self.typing_bubble_enabled else "开启打字气泡"
-        self.add_action(settings_menu, bubble_title, self.toggle_typing_bubble)
+        if GLOBAL_TYPING_SUPPORTED:
+            typing_title = "关闭打字跟随" if self.typing_follow_enabled else "开启打字跟随"
+            self.add_action(settings_menu, typing_title, self.toggle_typing_follow)
+            bubble_title = "关闭打字气泡" if self.typing_bubble_enabled else "开启打字气泡"
+            self.add_action(settings_menu, bubble_title, self.toggle_typing_bubble)
+        else:
+            self.add_action(settings_menu, "打字跟随不可用", self.show_typing_unavailable)
+            self.add_action(settings_menu, "打字气泡不可用", self.show_typing_unavailable)
 
         menu.addSeparator()
         self.add_action(menu, "状态面板", self.show_status_panel)
