@@ -94,7 +94,7 @@
     {"id": "rainbow_sticker", "type": "accessory", "rarity": "hidden", "title": "隐藏彩虹贴纸", "state_id": "event_happy_fly", "weight": 8},
     {"id": "title_lucky_mouse", "type": "title", "rarity": "hidden", "title": "今日欧气鼠", "state_id": "event_happy_fly", "weight": 16},
     {"id": "happy_fly_show", "type": "performance", "rarity": "hidden", "title": "愉快飞天庆祝", "state_id": "event_happy_fly", "weight": 16},
-    {"id": "hidden_big_bundle", "type": "bundle", "rarity": "hidden", "title": "满糖大奖礼包", "interaction": 120, "coins": 120, "shards": 8, "state_id": "event_happy_fly", "weight": 16},
+    {"id": "hidden_big_bundle", "type": "bundle", "rarity": "hidden", "title": "满糖大奖礼包", "interaction": 520, "coins": 520, "shards": 52, "accessories": ["full_sugar_crown", "lucky_star_halo"], "titles": ["title_lucky_mouse"], "bubble_frames": ["perm_cream_frame"], "performances": ["happy_fly_show"], "dialogues": ["full_sugar_mouse_language", "lucky_broadcast", "mystery_spell"], "state_id": "event_happy_fly", "weight": 16},
     {"id": "full_sugar_mouse_language", "type": "dialogue", "rarity": "hidden", "mode": "unlock", "title": "隐藏口头禅：满糖鼠鼠语", "text": "nianiania nianiania！满糖警报！", "target_groups": ["idle", "celebrate"], "state_id": "event_happy_fly", "weight": 6.7},
     {"id": "lucky_broadcast", "type": "dialogue", "rarity": "hidden", "mode": "unlock", "title": "隐藏口头禅：欧气播报", "text": "奶茶鼠震惊：你今天真的有点欧", "target_groups": ["idle", "celebrate"], "state_id": "event_happy_fly", "weight": 6.7},
     {"id": "mystery_spell", "type": "dialogue", "rarity": "hidden", "mode": "unlock", "title": "隐藏口头禅：神秘咒语", "text": "咕噜咕噜珍珠圆，今天好运转一圈", "target_groups": ["idle", "celebrate"], "state_id": "event_happy_fly", "weight": 6.6},

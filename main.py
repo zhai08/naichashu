@@ -176,36 +176,45 @@ BUBBLE_FRAME_STYLES: dict[str, dict[str, Any]] = {
             "border": "2px solid rgba(188, 132, 103, 230)",
             "padding": "10px 14px",
         },
+        "decoration": "♡ 奶茶鼠",
+        "status_decoration": "♡",
+        "decoration_color": "rgba(178, 128, 98, 185)",
     },
     "rare_bubble_cream": {
         "label": "奶盖气泡边框",
         "normal": {
-            "background": "rgba(255, 252, 242, 238)",
+            "background": "qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(255, 255, 247, 244), stop:0.42 rgba(255, 251, 235, 240), stop:1 rgba(255, 242, 219, 236))",
             "color": "#6a4536",
             "border": "3px solid rgba(218, 169, 115, 232)",
-            "padding": "6px 10px",
+            "padding": "8px 12px",
         },
         "status": {
-            "background": "rgba(255, 252, 242, 248)",
+            "background": "qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(255, 255, 247, 250), stop:0.42 rgba(255, 251, 235, 248), stop:1 rgba(255, 242, 219, 246))",
             "color": "#6a4536",
             "border": "3px solid rgba(218, 169, 115, 238)",
             "padding": "10px 14px",
         },
+        "decoration": "奶盖 ◦ ◦",
+        "status_decoration": "奶盖",
+        "decoration_color": "rgba(194, 128, 80, 190)",
     },
     "perm_cream_frame": {
         "label": "永久奶盖气泡边框",
         "normal": {
-            "background": "rgba(255, 249, 232, 240)",
+            "background": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 rgba(255, 255, 238, 246), stop:0.5 rgba(255, 246, 219, 242), stop:1 rgba(255, 235, 198, 238))",
             "color": "#643f31",
             "border": "3px solid rgba(236, 186, 94, 240)",
-            "padding": "6px 10px",
+            "padding": "8px 12px",
         },
         "status": {
-            "background": "rgba(255, 249, 232, 250)",
+            "background": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 rgba(255, 255, 238, 252), stop:0.5 rgba(255, 246, 219, 250), stop:1 rgba(255, 235, 198, 248))",
             "color": "#643f31",
             "border": "3px solid rgba(236, 186, 94, 245)",
             "padding": "10px 14px",
         },
+        "decoration": "✦ 满糖奶盖 ✦",
+        "status_decoration": "满糖",
+        "decoration_color": "rgba(197, 125, 50, 205)",
     },
 }
 
@@ -545,6 +554,11 @@ class NaichaMouse(QWidget):
         self.bubble.setAlignment(Qt.AlignCenter)
         self.bubble.hide()
 
+        self.bubble_decoration = QLabel(self)
+        self.bubble_decoration.setAlignment(Qt.AlignTop | Qt.AlignRight)
+        self.bubble_decoration.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self.bubble_decoration.hide()
+
         self.pet_label = QLabel(self)
         self.pet_label.setAlignment(Qt.AlignCenter)
         self.pet_label.setContextMenuPolicy(Qt.NoContextMenu)
@@ -827,6 +841,8 @@ class NaichaMouse(QWidget):
         self.bubble.setAlignment(Qt.AlignCenter)
         self.bubble.setStyleSheet(self.bubble_style(font_size, border_radius))
         self.bubble.setGeometry(12, 8, self.window_width - 24, self.bubble_height)
+        if self.bubble.isVisible():
+            self.update_bubble_decoration(status=False)
         self.pet_label.setGeometry(
             (self.window_width - self.pet_size) // 2,
             self.window_height - self.pet_size - 2,
@@ -844,7 +860,7 @@ class NaichaMouse(QWidget):
         line_height = "line-height: 130%;" if status else ""
         return f"""
         QLabel {{
-            background-color: {frame["background"]};
+            background: {frame["background"]};
             color: {frame["color"]};
             border: {frame["border"]};
             border-radius: {border_radius}px;
@@ -854,6 +870,35 @@ class NaichaMouse(QWidget):
             {line_height}
         }}
         """
+
+    def update_bubble_decoration(self, *, status: bool = False) -> None:
+        style = BUBBLE_FRAME_STYLES.get(
+            self.current_bubble_frame_id(),
+            BUBBLE_FRAME_STYLES[""],
+        )
+        key = "status_decoration" if status else "decoration"
+        text = str(style.get(key, ""))
+        if not text or not self.bubble.isVisible():
+            self.bubble_decoration.hide()
+            return
+        font_size = max(8, int((10 if status else 9) * self.user_scale))
+        self.bubble_decoration.setText(text)
+        self.bubble_decoration.setStyleSheet(
+            f"""
+            QLabel {{
+                background: transparent;
+                color: {style.get("decoration_color", "rgba(178, 128, 98, 185)")};
+                border: none;
+                padding: {max(5, int(6 * self.user_scale))}px {max(8, int(10 * self.user_scale))}px 0 0;
+                font-family: "Microsoft YaHei", "SimHei", sans-serif;
+                font-size: {font_size}px;
+                font-weight: 600;
+            }}
+            """
+        )
+        self.bubble_decoration.setGeometry(self.bubble.geometry())
+        self.bubble_decoration.show()
+        self.bubble_decoration.raise_()
 
     def save_profile(self) -> None:
         with PROFILE_PATH.open("w", encoding="utf-8") as file:
@@ -1112,6 +1157,7 @@ class NaichaMouse(QWidget):
         self.bubble.setGeometry(12, 8, self.window_width - 24, self.bubble_height)
         self.bubble.show()
         self.bubble.raise_()
+        self.update_bubble_decoration(status=False)
         self.bubble_timer.start(duration_ms)
 
     def show_status_bubble(self, text: str, duration_ms: int = 8600) -> None:
@@ -1143,10 +1189,12 @@ class NaichaMouse(QWidget):
         self.move(self.clamp_window_to_screen(QPoint(old_right - status_width, old_bottom - status_height)))
         self.bubble.show()
         self.bubble.raise_()
+        self.update_bubble_decoration(status=True)
         self.bubble_timer.start(duration_ms)
 
     def hide_bubble(self) -> None:
         self.bubble.hide()
+        self.bubble_decoration.hide()
         if self.status_panel_active:
             self.restore_normal_layout()
 
@@ -1235,6 +1283,8 @@ class NaichaMouse(QWidget):
         self.accessory_label.show()
         self.accessory_label.raise_()
         self.bubble.raise_()
+        if self.bubble_decoration.isVisible():
+            self.bubble_decoration.raise_()
 
     def accessory_hit_test(self, pos: QPoint) -> bool:
         if not self.accessory_label.isVisible() or self.accessory_pixmap is None:
@@ -2386,12 +2436,79 @@ class NaichaMouse(QWidget):
             interaction = int(reward.get("interaction", 0))
             coins = int(reward.get("coins", 0))
             shards = int(reward.get("shards", 0))
+            unlocked: list[str] = []
+            duplicate_unlocks = 0
             if interaction:
                 self.grant_gacha_interaction_value(interaction)
             if coins:
                 self.profile["coins"] = int(self.profile["coins"]) + coins
+
+            for accessory_id in reward.get("accessories", []):
+                accessory_id = str(accessory_id)
+                label = self.accessories.get("items", {}).get(accessory_id, {}).get("label", accessory_id)
+                if accessory_id in self.profile["owned_accessories"]:
+                    duplicate_unlocks += 1
+                    continue
+                self.profile["owned_accessories"].append(accessory_id)
+                self.profile["equipped_accessory"] = accessory_id
+                unlocked.append(f"配饰：{label}")
+
+            title_map = self.title_rewards()
+            for title_id in reward.get("titles", []):
+                title_id = str(title_id)
+                if title_id in self.profile["owned_titles"]:
+                    duplicate_unlocks += 1
+                    continue
+                self.profile["owned_titles"].append(title_id)
+                self.profile["equipped_title"] = title_id
+                unlocked.append(f"称号：{title_map.get(title_id, title_id)}")
+
+            frame_map = self.bubble_frame_rewards()
+            for frame_id in reward.get("bubble_frames", []):
+                frame_id = str(frame_id)
+                if frame_id in self.profile["owned_bubble_frames"]:
+                    duplicate_unlocks += 1
+                    continue
+                self.profile["owned_bubble_frames"].append(frame_id)
+                self.profile["equipped_bubble_frame"] = frame_id
+                unlocked.append(f"气泡：{frame_map.get(frame_id, frame_id)}")
+
+            performance_map = self.performance_rewards()
+            for performance_id in reward.get("performances", []):
+                performance_id = str(performance_id)
+                if performance_id in self.profile["owned_special_performances"]:
+                    duplicate_unlocks += 1
+                    continue
+                self.profile["owned_special_performances"].append(performance_id)
+                unlocked.append(f"演出：{performance_map.get(performance_id, {}).get('title', performance_id)}")
+
+            dialogue_rewards = {
+                str(item.get("id")): item
+                for item in self.gacha_pool.get("rewards", [])
+                if item.get("type") == "dialogue"
+            }
+            for dialogue_id in reward.get("dialogues", []):
+                dialogue_id = str(dialogue_id)
+                dialogue = dialogue_rewards.get(dialogue_id, {})
+                target = "owned_dialogue_packs" if dialogue.get("mode") == "pack" else "owned_dialogues"
+                if dialogue_id in self.profile[target]:
+                    duplicate_unlocks += 1
+                    continue
+                self.profile[target].append(dialogue_id)
+                self.bump_dialogue_seen(dialogue_id)
+                unlocked.append(f"口头禅：{dialogue.get('title', dialogue_id)}")
+
             shard_gain = shards
-            detail = f"礼包：互动值 +{interaction}，金币 +{coins}，奶茶碎片 +{shards}"
+            if duplicate_unlocks:
+                shard_gain += duplicate_unlocks * self.duplicate_shards_for_rarity(rarity)
+            unlocked_text = "；".join(unlocked[:4])
+            if len(unlocked) > 4:
+                unlocked_text += f"；等 {len(unlocked)} 项收藏"
+            detail = (
+                f"满糖大奖：互动值 +{interaction}，金币 +{coins}，奶茶碎片 +{shards}"
+                + (f"\n解锁 {unlocked_text}" if unlocked_text else "")
+                + (f"\n重复收藏转碎片 +{duplicate_unlocks * self.duplicate_shards_for_rarity(rarity)}" if duplicate_unlocks else "")
+            )
 
         if shard_gain:
             self.profile["milk_tea_shards"] = int(self.profile["milk_tea_shards"]) + shard_gain
