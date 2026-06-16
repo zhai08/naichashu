@@ -78,6 +78,7 @@ BASE_PET_SIZE = 240
 BASE_WINDOW_WIDTH = 330
 BASE_WINDOW_HEIGHT = 315
 BASE_BUBBLE_HEIGHT = 72
+DEFAULT_SCALE_PERCENT = 50
 
 
 class WinRect(Structure):
@@ -497,11 +498,14 @@ class NaichaMouse(QWidget):
         self.profile, self.daily_start_pending = self.load_profile()
         self.ensure_accessory_profile()
 
-        self.pet_size = BASE_PET_SIZE
-        self.window_width = BASE_WINDOW_WIDTH
-        self.window_height = BASE_WINDOW_HEIGHT
-        self.bubble_height = BASE_BUBBLE_HEIGHT
-        self.user_scale = 1.0
+        self.user_scale = DEFAULT_SCALE_PERCENT / 100
+        self.pet_size = max(72, int(BASE_PET_SIZE * self.user_scale))
+        self.window_width = max(190, int(BASE_WINDOW_WIDTH * self.user_scale))
+        self.window_height = max(
+            self.pet_size + 80,
+            int(BASE_WINDOW_HEIGHT * self.user_scale),
+        )
+        self.bubble_height = max(58, int(BASE_BUBBLE_HEIGHT * self.user_scale))
 
         self.current_state_id = self.default_state
         self.current_movie: Optional[QMovie] = None
