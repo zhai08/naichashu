@@ -1,77 +1,158 @@
-This is a macOS-compatible fork of NaichaShu.
-Original project: https://github.com/Xzyery/naichashu
-Original author: Xzyery
+NaichaMouse macOS Fork
 
-# NaichaMouse macOS Safe Source Edition
+这是一个基于 NaichaShu 的 macOS 兼容版本。
 
-奶茶鼠桌宠是一个基于 PyQt5 的桌面陪伴小程序。本分支在保留原有桌宠、动画、成长、扭蛋、配饰和 AI 聊天功能的基础上，加入了 macOS 兼容处理。
+原项目：
+https://github.com/Xzyery/naichashu
 
-## 主要变化
+原作者：
+Xzyery
 
-- macOS 下不再加载 Windows `user32` API。
-- macOS 下默认关闭全局打字检测、打字跟随和打字气泡计数。
-- macOS 打包运行时，本地数据写入 `~/Library/Application Support/NaichaMouse/`，避免写入 `.app` 内部或桌面目录。
-- Windows 下仍保留原来的全局打字跟随逻辑。
+本 Fork 的主要目标是让项目能够在 macOS 上正常运行，同时移除部分 Windows 专用功能和不必要的敏感权限需求。
 
-## 功能保留
+⸻
 
-- 桌宠窗口、拖动、置顶显示
-- GIF/PNG 状态动画
-- 启动动画、退出动画
-- 右键菜单
-- 随机动作和气泡台词
-- 成长等级、经验、金币
-- 专注计时、喝水提醒、久坐提醒
-- 扭蛋机奖励
-- 配饰显示、位置和缩放保存
-- 气泡样式切换
-- AI 聊天配置与对话
+功能
 
-## macOS 安全说明
+本版本保留了原项目的大部分功能：
 
-macOS 稳妥版不会申请或使用：
+* 桌宠动画与状态切换
+* 拖动、置顶显示
+* 随机动作与气泡台词
+* 成长等级、经验、金币系统
+* 专注计时
+* 喝水提醒
+* 久坐提醒
+* 扭蛋机
+* 配饰系统
+* AI 聊天功能
 
-- 输入监控
-- 辅助功能权限
-- 摄像头
-- 麦克风
-- 定位
-- 通讯录
-- 管理员权限
+⸻
 
-AI 聊天只有在用户主动配置 API 后才会联网。API Key 会保存在本地配置文件中，不建议提交到仓库或发送给他人。
+macOS 兼容修改
 
-## 运行方式
+本 Fork 对原项目进行了以下调整：
 
-建议使用 Python 3.10 到 3.12。若使用 Conda 的 Python 3.13，PyQt5 在 macOS 上可能出现 Qt `cocoa` 插件加载问题。
+* macOS 下不再加载 Windows user32 API
+* macOS 下默认关闭全局键盘监听与打字跟随功能
+* macOS 打包运行时，本地数据保存到标准 Application Support 目录
+* 避免因权限问题导致的崩溃
 
-```bash
-cd naichashu-main
+⸻
+
+安全说明
+
+本版本不会主动申请或使用：
+
+* 输入监控（Input Monitoring）
+* 辅助功能权限（Accessibility）
+* 摄像头
+* 麦克风
+* 定位
+* 通讯录
+* 管理员权限
+
+AI 聊天功能只有在用户自行配置 API 后才会联网。
+
+如果未配置 API，程序不会主动访问外部 AI 服务。
+
+⸻
+
+系统要求
+
+建议使用：
+
+* macOS
+* Python 3.10–3.12
+
+已知 Python 3.13 + PyQt5 在部分 macOS 环境下可能出现 Qt 插件兼容问题。
+
+⸻
+
+安装与运行
+
+1. 下载项目
+
+下载本仓库源码并解压。
+
+进入项目目录：
+
+cd naichashu
+
+2. 创建虚拟环境
+
 python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python main.py
-```
 
-退出方式：右键奶茶鼠，选择 `退出`。
+3. 激活虚拟环境
 
-## 本地数据
+source .venv/bin/activate
 
-源码方式运行时，本地数据默认保存在项目目录：
+激活成功后，终端前面会出现：
 
-- `naicha_mouse_profile.json`
-- `naicha_mouse_ai_config.json`
+(.venv)
 
-macOS `.app` 打包方式运行时，本地数据保存在：
+4. 安装依赖
 
-```text
-~/Library/Application Support/NaichaMouse/
-```
+pip install -r requirements.txt
 
-这些文件用于保存等级、金币、配饰状态和 AI 配置，不应提交到 Git。
+5. 启动程序
 
-## 项目文件
+python main.py
 
-```text
+⸻
+
+常见问题
+
+ModuleNotFoundError: No module named ‘PyQt5’
+
+原因：
+
+PyQt5 尚未安装到当前 Python 环境。
+
+解决方法：
+
+pip install -r requirements.txt
+
+或：
+
+pip install PyQt5
+
+然后重新运行：
+
+python main.py
+
+⸻
+
+为什么不能直接双击 main.py？
+
+因为 Python 程序依赖额外库（例如 PyQt5）。
+
+直接双击文件或使用系统自带 Python 运行时，可能找不到这些依赖，从而导致启动失败。
+
+建议按照上面的步骤创建虚拟环境并安装依赖后运行。
+
+⸻
+
+本地数据
+
+源码运行时，用户数据会保存在项目目录中，例如：
+
+naicha_mouse_profile.json
+naicha_mouse_ai_config.json
+
+这些文件用于保存：
+
+* 等级
+* 金币
+* 配饰状态
+* AI 配置
+
+不建议上传到 GitHub 或分享给他人。
+
+⸻
+
+项目结构
+
 main.py
 requirements.txt
 IMG_5791/
@@ -80,6 +161,17 @@ naicha_mouse_state_map.json
 naicha_mouse_dialogues.json
 naicha_mouse_gacha_pool.json
 naicha_mouse_accessories.json
-```
 
-不要只复制 `main.py`。程序运行需要旁边的素材文件夹和 JSON 配置。
+请不要只复制 main.py。
+
+程序运行需要上述图片资源文件夹和 JSON 配置文件。
+
+⸻
+
+免责声明
+
+本仓库为个人维护的 macOS 兼容 Fork。
+
+原项目版权及主要功能设计归原作者 Xzyery 所有。
+
+本 Fork 仅包含兼容性、安全性和运行方式相关修改。
