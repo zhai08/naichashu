@@ -247,4 +247,4 @@ required_exp = int(55 + level * level * 0.25 + level * 18)
 
 ## Star 趋势
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Xzyery/naichashu&type=Date)](https://star-history.com/#Xzyery/naichashu&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=Xzyery/naicha-mouse-desktop-pet&type=Date)](https://star-history.com/#Xzyery/naicha-mouse-desktop-pet&Date)
