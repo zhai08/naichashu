@@ -71,6 +71,28 @@ AI 聊天功能只有在用户自行配置 API 后才会联网。
 
 安装与运行
 
+简单版使用方法（macOS）
+
+1. 下载并解压 NaichaMouse-macOS.zip
+2. 找到 NaichaMouse.app
+3. 右键点击 NaichaMouse.app
+4. 选择 打开（Open）
+5. 如果系统提示无法验证开发者，请再次点击 打开
+
+如果提示“已损坏，无法打开”
+
+打开终端（Terminal），输入下面命令后回车：
+
+xattr -dr com.apple.quarantine ~/Downloads/NaichaMouse.app
+
+然后再次右键点击 NaichaMouse.app → 打开
+
+为什么会这样？
+
+由于本项目是个人维护的开源版本，没有 Apple 官方签名，因此 macOS 可能会拦截首次运行。这并不代表程序真的损坏，只是系统的安全检查机制。
+
+
+代码版：
 1. 下载项目
 
 下载本仓库源码并解压。
