@@ -73,7 +73,7 @@ AI 聊天功能只有在用户自行配置 API 后才会联网。
 
 简单版使用方法（macOS）
 
-1. 下载并解压 NaichaMouse-macOS.zip
+1. 下载并解压 NaichaMouse-macOS.zip （右侧release里）
 2. 找到 NaichaMouse.app
 3. 右键点击 NaichaMouse.app
 4. 选择 打开（Open）
