@@ -81,6 +81,8 @@ AI 聊天功能只有在用户自行配置 API 后才会联网。
 
 如果提示“已损坏，无法打开”
 
+将奶茶鼠app移动到download（下载）文件夹
+
 打开终端（Terminal），输入下面命令后回车：
 
 xattr -dr com.apple.quarantine ~/Downloads/NaichaMouse.app
